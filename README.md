@@ -17,11 +17,12 @@ Full API Reference on https://zawodskoj.github.io/
 
 ## OS Support
 
-GoddamnConsole uses INativeConsoleProvider interface. It abstracts low-level console API from library. Now supported only Windows provider, but Linux provider will be added soon
+GoddamnConsole uses `INativeConsoleProvider` interface. It abstracts away a low-level console API from the library. For now, only Windows provider is supported, but Linux provider will be added soon.
 
 ## Installation
 
-You can download binary build and add reference to it, or you can download sources and build it by yourself.
+You can download a binary build and add the reference to it, or you can download sources and build it by yourself.
+
 NuGet package will be added later.
 
 ## Contribute
@@ -29,9 +30,9 @@ NuGet package will be added later.
 If you want to make GoddamnConsole better, you can
 
 1. Learn the code and suggest your changes on GitHub repository.
-2. Detect defects and report them on GitHub issue tracker.
+2. Detect defects and [report them](https://github.com/zawodskoj/GoddamnConsole/issues/new) on GitHub issue tracker.
 
 If you have questions
 
-1. Send email on zawodskoj@outlook.com
+1. Send an email to zawodskoj@outlook.com
 2. Write me on VK https://new.vk.com/zawodskoj
