@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
@@ -14,20 +15,22 @@ namespace GoddamnConsole.DataBinding
             public object Object { get; set; }
             public Type ObjectType { get; set; }
             public PropertyInfo Property { get; set; }
-            public PropertyChangedEventHandler Handler { get; set; }
+            public PropertyChangedEventHandler PcHandler { get; set; }
+            public NotifyCollectionChangedEventHandler CcHandler { get; set; }
+            public object[] Indices { get; set; } 
         }
-
-        private readonly string _path;
+        
         private readonly Control _control;
         private readonly PropertyInfo _property;
         
         private readonly List<BindingNode> _nodes = new List<BindingNode>();
         private readonly bool _strict;
         private readonly BindingMode _mode;
+        private readonly BindingPath _path;
 
         public Binding(Control control, PropertyInfo property, string path, BindingMode mode, bool strict)
         {
-            _path = path;
+            _path = new BindingPath(path);
             _property = property;
             _control = control;
             _mode = mode;
@@ -37,73 +40,194 @@ namespace GoddamnConsole.DataBinding
             Refresh();
         }
 
+        private object _lock = new object();
+        private BindingNode _changingNode;
+
         private void OnTargetPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
             var last = _nodes.LastOrDefault();
             if (last == null) return;
-            last.Property.SetValue(last.Object, _property.GetValue(_control));
+            lock (_lock)
+            {
+                _changingNode = last;
+                if (last.Indices == null)
+                    last.Property.SetValue(last.Object, _property.GetValue(_control));
+                else
+                    last.Property.SetValue(last.Object, _property.GetValue(_control), last.Indices);
+                _changingNode = null;
+            }
         }
 
         private void OnPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
             var node = _nodes.FirstOrDefault(x => x.Object == sender && x.Property.Name == e.PropertyName);
-            if (node != null) Refresh();
+            if (node != null && node != _changingNode) Refresh();
+        }
+
+        private void OnCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        {
+            var node = _nodes.FirstOrDefault(x => x.Object == sender);
+            if (node != null && node != _changingNode) Refresh();
         }
 
         public void Cleanup(bool unbindTarget = false)
         {
             if (unbindTarget && (_mode == BindingMode.OneWayToSource || _mode == BindingMode.TwoWay))
                 _control.PropertyChanged -= OnTargetPropertyChanged;
-            foreach (var node in _nodes.Where(x => x.Handler != null))
+            foreach (var node in _nodes.Where(x => x.PcHandler != null))
             {
-                node.ObjectType
-                    .GetEvent(nameof(INotifyPropertyChanged.PropertyChanged))
-                    .RemoveEventHandler(node.Object, node.Handler);
+                ((INotifyPropertyChanged)node.Object).PropertyChanged -= node.PcHandler;
+            }
+            foreach (var node in _nodes.Where(x => x.CcHandler != null))
+            {
+                ((INotifyCollectionChanged) node.Object).CollectionChanged -= node.CcHandler;
             }
             _nodes.Clear();
+        }
+
+        private static readonly Type[] NumberTypes =
+        {
+            typeof(int),
+            typeof(uint),
+            typeof(long),
+            typeof(ulong),
+            typeof(short),
+            typeof(ushort),
+            typeof(sbyte),
+            typeof(byte),
+            typeof(float),
+            typeof(double),
+            typeof(decimal),
+        };
+
+        private Type TypeOfIndex(Index index, object dc, Type target)
+        {
+            switch (index.Type)
+            {
+                case IndexType.Boolean:
+                    return typeof(bool);
+                case IndexType.String:
+                    return typeof(string);
+                case IndexType.Number:
+                    if (NumberTypes.Contains(target)) return target;
+                    throw new Exception("Target type mismatch");
+                case IndexType.Path:
+                    return Traverse(index.Path, dc).GetType();
+                default:
+                    throw new Exception("Unknown index type");
+            }
+        }
+
+        private object EvaluateIndex(Index index, object dc, Type target)
+        {
+            switch (index.Type)
+            {
+                case IndexType.Boolean:
+                    return index.Boolean;
+                case IndexType.String:
+                    return index.String;
+                case IndexType.Number:
+                    if (NumberTypes.Contains(target)) return Convert.ChangeType(index.Number, target);
+                    throw new Exception("Target type mismatch");
+                case IndexType.Path:
+                    return Traverse(index.Path, dc);
+                default:
+                    throw new Exception("Unknown index type");
+            }
+        }
+
+        private object Traverse(List<BindingPathNode> nodes, object dc)
+        {
+            var rdc = dc;
+            try
+            {
+                foreach (var node in nodes)
+                {
+                    var dct = dc.GetType();
+                    if (node.Property != null)
+                    {
+                        var prop = dct.GetProperty(node.Property);
+                        if (prop == null)
+                            throw new Exception($"Property does not exist: {dct.Name}.{node.Property}");
+                        var val = prop.GetValue(dc);
+                        if (!_nodes.Exists(x => x.Object == dc && x.PcHandler != null && x.Property == prop))
+                        {
+                            PropertyChangedEventHandler pc = null;
+                            if (dc is INotifyPropertyChanged)
+                            {
+                                pc = OnPropertyChanged;
+                                ((INotifyPropertyChanged) dc).PropertyChanged += pc;
+                            }
+                            _nodes.Add(new BindingNode
+                            {
+                                Property = prop,
+                                Object = dc,
+                                ObjectType = dct,
+                                PcHandler = pc
+                            });
+                        }
+                        dc = val;
+                        dct = dc.GetType();
+                    }
+                    if (node.Indices.Count > 0)
+                    {
+                        var prop = dct.GetProperties().FirstOrDefault(x =>
+                        {
+                            var xindices = x.GetIndexParameters();
+                            if (xindices.Length == node.Indices.Count)
+                                return
+                                    xindices.Zip(node.Indices, (a, b) => a.ParameterType.IsAssignableFrom(TypeOfIndex(b, rdc, a.ParameterType)))
+                                           .All(a => a);
+                            return false;
+                        });
+                        if (prop == null) throw new Exception("Indexer does not exist");
+                        var indices = prop.GetIndexParameters();
+                        var realIndices = node.Indices.Zip(indices,
+                                                           (x, y) => EvaluateIndex(x, rdc, y.ParameterType))
+                                              .ToArray();
+                        var val = prop.GetValue(
+                            dc,
+                            realIndices);
+                        if (!_nodes.Exists(x => x.Object == dc && x.CcHandler != null && x.Property == prop))
+                        {
+                            NotifyCollectionChangedEventHandler cc = null;
+                            if (dc is INotifyCollectionChanged)
+                            {
+                                cc = OnCollectionChanged;
+                                ((INotifyCollectionChanged)dc).CollectionChanged += cc;
+                            }
+                            _nodes.Add(new BindingNode
+                            {
+                                Property = prop,
+                                Object = dc,
+                                ObjectType = dct,
+                                CcHandler = cc,
+                                Indices = realIndices
+                            });
+                        }
+                        dc = val;
+                    }
+                }
+            }
+            catch
+            {
+                if (_strict) throw;
+            }
+            return dc;
         }
 
         public void Refresh()
         {
             Cleanup();
-            var data = _control.DataContext;
+            var dc = _control.DataContext;
+            if (dc == null) return;
             try
             {
-                foreach (var pathNode in _path.Split('.'))
-                {
-                    var type = data.GetType();
-                    var property = type.GetProperty(pathNode);
-                    if (property == null) throw new Exception("Invalid path");
-                    var propValue = property.GetValue(data);
-                    PropertyChangedEventHandler handler = null;
-                    if (data is INotifyPropertyChanged)
-                    {
-                        handler = OnPropertyChanged;
-                        (data as INotifyPropertyChanged).PropertyChanged += handler;
-                    }
-                    _nodes.Add(new BindingNode
-                    {
-                        Object = data,
-                        Property = property,
-                        Handler = handler,
-                        ObjectType = type
-                    });
-                    data = propValue;
-                }
-                try
-                {
-                    if (_mode == BindingMode.OneWay || _mode == BindingMode.TwoWay)
-                        _property.SetValue(_control, data);
-                }
-                catch
-                {
-                    if (_strict) throw; // invalid property value
-                }
+                _property.SetValue(_control, Traverse(_path.Nodes, dc));
             }
             catch
             {
-                Cleanup();
-                if (_strict) throw; // invalid path
+                if (_strict) throw;
             }
         }
     }

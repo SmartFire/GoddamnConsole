@@ -65,6 +65,7 @@
     <Compile Include="Controls\TextView.cs" />
     <Compile Include="Controls\WindowBase.cs" />
     <Compile Include="DataBinding\Binding.cs" />
+    <Compile Include="DataBinding\BindingPath.cs" />
     <Compile Include="Drawing\DrawingContext.cs" />
     <Compile Include="Drawing\ImaginaryDrawingContext.cs" />
     <Compile Include="Drawing\Objects.cs" />

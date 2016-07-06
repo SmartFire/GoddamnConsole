@@ -12,7 +12,7 @@ namespace GoddamnConsole
     /// <summary>
     /// Represents a control host
     /// </summary>
-    public class Console
+    public static class Console
     {
         static Console()
         {
@@ -125,7 +125,14 @@ namespace GoddamnConsole
                     return;
                 }
                 _prevent = true;
-                Focused?.OnKeyPressedInternal(e.Info);
+                if (
+                    Hotkeys.ContainsKey(new ConsoleKeyInfo('\0', e.Info.Key,
+                                                           e.Info.Modifiers.HasFlag(ConsoleModifiers.Shift),
+                                                           e.Info.Modifiers.HasFlag(ConsoleModifiers.Alt), false)))
+                {
+                    Hotkeys[e.Info]();
+                }
+                else Focused?.OnKeyPressedInternal(e.Info);
                 _prevent = false;
                 Refresh();
             };
@@ -267,6 +274,22 @@ namespace GoddamnConsole
             {
                 _refreshing = false; 
             }
+        }
+
+        private static readonly Dictionary<ConsoleKeyInfo, Action> Hotkeys = new Dictionary<ConsoleKeyInfo, Action>();
+
+        public static void RegisterHotkey(ConsoleKey key, bool shift, bool alt, Action action)
+        {
+            var hotkey = new ConsoleKeyInfo('\0', key, shift, alt, false); // ctrl can't be intercepted in unix terminal
+            if (Hotkeys.ContainsKey(hotkey)) throw new Exception("Hotkey already registered");
+            Hotkeys.Add(hotkey,  action);
+        }
+
+        public static void UnregisterHotkey(ConsoleKey key, bool shift, bool alt)
+        {
+            var hotkey = new ConsoleKeyInfo('\0', key, shift, alt, false);
+            if (!Hotkeys.ContainsKey(hotkey)) throw new Exception("Hotkey is not registed");
+            Hotkeys.Remove(hotkey);
         }
         
         /// <summary>

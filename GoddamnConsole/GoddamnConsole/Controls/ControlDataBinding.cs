@@ -46,7 +46,7 @@ namespace GoddamnConsole.Controls
             Binding existingBinding;
             _bindings.TryGetValue(property, out existingBinding);
             if (existingBinding == null) return;
-            existingBinding.Cleanup();
+            existingBinding.Cleanup(true);
             _bindings.Remove(property);
         }
     }
