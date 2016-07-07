@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Globalization;
 using System.Linq;
 using GoddamnConsole.Drawing;
 
@@ -254,6 +256,7 @@ namespace GoddamnConsole.Controls
     /// <summary>
     /// Represents a size of control that supports different kinds of sizing
     /// </summary>
+    [TypeConverter(typeof(ControlSizeConverter))]
     public struct ControlSize
     {
         public ControlSize(ControlSizeType type, int value)
@@ -281,6 +284,34 @@ namespace GoddamnConsole.Controls
         public static implicit operator ControlSize(ControlSizeType type)
         {
             return new ControlSize(type, 0);
+        }
+
+    }
+
+    public class ControlSizeConverter : TypeConverter
+    {
+
+        public override bool CanConvertFrom(ITypeDescriptorContext context, Type sourceType)
+        {
+            return sourceType == typeof(string);
+        }
+
+        public override bool CanConvertTo(ITypeDescriptorContext context, Type destinationType)
+        {
+            return destinationType == typeof(ControlSize);
+        }
+
+        public override object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, object value)
+        {
+            var str = (string)value;
+            int iv;
+            if (!int.TryParse(str, out iv))
+            {
+                ControlSizeType utv;
+                if (!Enum.TryParse(str, out utv)) throw new InvalidCastException();
+                return new ControlSize(utv, 0);
+            }
+            return new ControlSize(ControlSizeType.Fixed, iv);
         }
     }
 }

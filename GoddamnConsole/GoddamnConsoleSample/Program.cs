@@ -1,5 +1,4 @@
-﻿using System.ComponentModel;
-using System.Linq;
+﻿using System.Linq;
 using GoddamnConsole.Controls;
 using GoddamnConsole.Drawing;
 using Console = GoddamnConsole.Console;
@@ -47,15 +46,15 @@ namespace GoddamnConsoleSample
                         {
                             Text = "1"
                         },
-                        AttachedProperties =
-                        {
-                            new GridProperties
-                            {
-                                Row = 0,
-                                Column = 0,
-                                RowSpan = 3
-                            }
-                        }
+                        //AttachedProperties =
+                        //{
+                        //    new GridProperties
+                        //    {
+                        //        Row = 0,
+                        //        Column = 0,
+                        //        RowSpan = 3
+                        //    }
+                        //}
                     },
                     new Border
                     {
@@ -64,15 +63,15 @@ namespace GoddamnConsoleSample
                         {
                             Text = "2"
                         },
-                        AttachedProperties =
-                        {
-                            new GridProperties
-                            {
-                                Row = 0,
-                                Column = 1,
-                                ColumnSpan = 2
-                            }
-                        }
+                        //AttachedProperties =
+                        //{
+                        //    new GridProperties
+                        //    {
+                        //        Row = 0,
+                        //        Column = 1,
+                        //        ColumnSpan = 2
+                        //    }
+                        //}
                     },
                     new Border
                     {
@@ -81,14 +80,14 @@ namespace GoddamnConsoleSample
                         {
                             Text = "3"
                         },
-                        AttachedProperties =
-                        {
-                            new GridProperties
-                            {
-                                Row = 1,
-                                Column = 1
-                            }
-                        }
+                        //AttachedProperties =
+                        //{
+                        //    new GridProperties
+                        //    {
+                        //        Row = 1,
+                        //        Column = 1
+                        //    }
+                        //}
                     },
                     new Border
                     {
@@ -97,14 +96,14 @@ namespace GoddamnConsoleSample
                         {
                             Text = "4"
                         },
-                        AttachedProperties =
-                        {
-                            new GridProperties
-                            {
-                                Row = 2,
-                                Column = 2
-                            }
-                        }
+                        //AttachedProperties =
+                        //{
+                        //    new GridProperties
+                        //    {
+                        //        Row = 2,
+                        //        Column = 2
+                        //    }
+                        //}
                     }
                 }
             };
@@ -129,15 +128,15 @@ namespace GoddamnConsoleSample
             var view = new TextView
             {
                 DataContext = box,
-                AttachedProperties =
-                {
-                    new GridProperties
-                    {
-                        Row = 1
-                    }
-                }
+                //AttachedProperties =
+                //{
+                //    new GridProperties
+                //    {
+                //        Row = 1
+                //    }
+                //}
             };
-            view.Bind(nameof(view.Text), "Text");
+            //view.Bind(nameof(view.Text), "Text");
             var tabControlTest = new ContentWindow
             {
                 Title = "ContentWindow + TabControl2 Test (Prev: Shift+Tab)",
@@ -308,51 +307,6 @@ namespace GoddamnConsoleSample
             Console.Windows.Add(gridWindowTest);
             Console.Windows.Add(tabControlTest);
             Console.Start();
-        }
-    }
-
-    public class TestClass : INotifyPropertyChanged
-    {
-        public class TestNestedClass : INotifyPropertyChanged
-        {
-            public class TestNestedClass2 : INotifyPropertyChanged
-            {
-                private int _testProperty;
-                public event PropertyChangedEventHandler PropertyChanged;
-
-                public int TestProperty
-                {
-                    get { return _testProperty; }
-                    set
-                    {
-                        _testProperty = value; PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(TestProperty)));
-                    }
-                }
-            }
-
-            private TestNestedClass2 _testProperty;
-            public event PropertyChangedEventHandler PropertyChanged;
-
-            public TestNestedClass2 TestNestedProperty2
-            {
-                get { return _testProperty; }
-                set
-                {
-                    _testProperty = value; PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(TestNestedProperty2)));
-                }
-            }
-        }
-
-        private TestNestedClass _testProperty;
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        public TestNestedClass TestNestedProperty
-        {
-            get { return _testProperty; }
-            set
-            {
-                _testProperty = value; PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(TestNestedProperty)));
-            }
         }
     }
 }

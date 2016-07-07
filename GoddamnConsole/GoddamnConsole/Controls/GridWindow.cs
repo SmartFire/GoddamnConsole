@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Xaml;
 using GoddamnConsole.Drawing;
 using static GoddamnConsole.Drawing.FrameOptions;
 
@@ -9,6 +10,46 @@ namespace GoddamnConsole.Controls
 {
     public class GridWindow : WindowBase, IChildrenControl
     {
+        // + Attached properties
+
+        private static readonly AttachableMemberIdentifier RowProperty = new AttachableMemberIdentifier(typeof(GridWindow), "Row");
+
+        public static int GetRow(IBetterAttachedPropertyStore dp) => dp.GetValue<int>(RowProperty);
+
+        public static void SetRow(IBetterAttachedPropertyStore dp, int value)
+        {
+            dp.SetProperty(RowProperty, value);
+        }
+
+        private static readonly AttachableMemberIdentifier RowSpanProperty = new AttachableMemberIdentifier(typeof(GridWindow), "RowSpan");
+
+        public static int GetRowSpan(IBetterAttachedPropertyStore dp) => dp.GetValue<int>(RowSpanProperty);
+
+        public static void SetRowSpan(IBetterAttachedPropertyStore dp, int value)
+        {
+            dp.SetProperty(RowSpanProperty, value);
+        }
+
+        private static readonly AttachableMemberIdentifier ColumnProperty = new AttachableMemberIdentifier(typeof(GridWindow), "Column");
+
+        public static int GetColumn(IBetterAttachedPropertyStore dp) => dp.GetValue<int>(ColumnProperty);
+
+        public static void SetColumn(IBetterAttachedPropertyStore dp, int value)
+        {
+            dp.SetProperty(ColumnProperty, value);
+        }
+
+        private static readonly AttachableMemberIdentifier ColumnSpanProperty = new AttachableMemberIdentifier(typeof(GridWindow), "ColumnSpan");
+
+        public static int GetColumnSpan(IBetterAttachedPropertyStore dp) => dp.GetValue<int>(ColumnSpanProperty);
+
+        public static void SetColumnSpan(IBetterAttachedPropertyStore dp, int value)
+        {
+            dp.SetProperty(ColumnSpanProperty, value);
+        }
+
+        // - Attached properties
+
         public GridWindow()
         {
             Children = new ChildrenCollection(this);
@@ -26,11 +67,11 @@ namespace GoddamnConsole.Controls
             => DrawBorders ? new Size(Math.Max(1, ColumnDefinitions.Count) + 1, Math.Max(1, RowDefinitions.Count) + 1) : new Size(2, 2);
 
         public override int MaxHeight =>
-            Children.GroupBy(x => x.AttachedProperty<GridProperties>()?.Column ?? 0)
+            Children.GroupBy(GetColumn)
                     .Max(x => x.Sum(y => y.ActualHeight)) + BoundingBoxReduction.Height;
 
         public override int MaxWidth =>
-            Children.GroupBy(x => x.AttachedProperty<GridProperties>()?.Row ?? 0)
+            Children.GroupBy(GetRow)
                     .Max(x => x.Sum(y => y.ActualWidth)) + BoundingBoxReduction.Width;
 
         /// <summary>
@@ -58,13 +99,8 @@ namespace GoddamnConsole.Controls
                 switch (definitions[i].UnitType)
                 {
                     case GridUnitType.Auto:
-                        var children = Children.Where(x =>
-                        {
-                            var props = x.AttachedProperty<GridProperties>() ?? new GridProperties();
-                            // ReSharper disable AccessToModifiedClosure
-                            return measureColumns ? props.Column == i : props.Row == i;
-                            // ReSharper restore AccessToModifiedClosure
-                        }).ToArray();
+                        var children =
+                            Children.Where(x => measureColumns ? GetColumn(x) == i : GetRow(x) == i).ToArray();
                         if (children.Length > 0)
                             sizes[i] =
                                 measureColumns
@@ -87,15 +123,15 @@ namespace GoddamnConsole.Controls
                         break; // process later
                 }
             }
-            var remaining = boxSize - sizes.Sum(x => x != long.MaxValue ? x : 0);
-            var alignedToBox = sizes.Count(x => x == long.MaxValue);
+            var remaining = boxSize - sizes.Sum(x => x < int.MaxValue ? x : 0);
+            var alignedToBox = sizes.Count(x => x >= int.MaxValue);
             if (alignedToBox > 0)
             {
                 var size = remaining / alignedToBox;
                 var first = true;
                 for (var i = 0; i < sizes.Length; i++)
                 {
-                    if (sizes[i] == long.MaxValue)
+                    if (sizes[i] >= int.MaxValue)
                     {
                         if (first)
                         {
@@ -139,11 +175,10 @@ namespace GoddamnConsole.Controls
             if (!Children.Contains(child)) return new Rectangle(0, 0, 0, 0);
             var rows = MeasureSizes(false);
             var columns = MeasureSizes(true);
-            var props = child.AttachedProperty<GridProperties>() ?? new GridProperties();
-            var row = Math.Max(0, Math.Min(props.Row, rows.Length));
-            var column = Math.Max(0, Math.Min(props.Column, columns.Length));
-            var rowSpan = Math.Max(1, Math.Min(props.RowSpan, rows.Length - row));
-            var columnSpan = Math.Max(1, Math.Min(props.ColumnSpan, columns.Length - column));
+            var row = Math.Max(0, Math.Min(GetRow(child), rows.Length));
+            var column = Math.Max(0, Math.Min(GetColumn(child), columns.Length));
+            var rowSpan = Math.Max(1, Math.Min(GetRowSpan(child), rows.Length - row));
+            var columnSpan = Math.Max(1, Math.Min(GetColumnSpan(child), columns.Length - column));
             var x = columns.Take(column).Sum();
             var y = rows.Take(row).Sum();
             var w = columns.Skip(column).Take(columnSpan).Sum();
@@ -173,15 +208,17 @@ namespace GoddamnConsole.Controls
                 vertical
                     ? Children.Any(x =>
                     {
-                        var atp = x.AttachedProperty<GridProperties>();
-                        return ((atp?.Row ?? 0) <= row) && ((atp?.Column ?? 0) == column) &&
-                               ((atp?.Row ?? 0) + (atp?.RowSpan ?? 1) - 1 > row);
+                        var xrow = GetRow(x);
+                        var xcol = GetColumn(x);
+                        return (xrow <= row) && (xcol == column) &&
+                               (xrow + GetRowSpan(x) - 1 > row);
                     })
                     : Children.Any(x =>
                     {
-                        var atp = x.AttachedProperty<GridProperties>();
-                        return ((atp?.Row ?? 0) == row) && ((atp?.Column ?? 0) <= column) &&
-                               ((atp?.Column ?? 0) + (atp?.ColumnSpan ?? 1) - 1 > row);
+                        var xrow = GetRow(x);
+                        var xcol = GetColumn(x);
+                        return (xrow == row) && (xcol <= column) &&
+                               (xcol + GetColumnSpan(x) - 1 > column);
                     });
         }
 
@@ -214,11 +251,7 @@ namespace GoddamnConsole.Controls
             for (var column = 0; column < Math.Max(1, ColumnDefinitions.Count); column++)
                 for (var row = 0; row < Math.Max(1, RowDefinitions.Count); row++)
                 {
-                    var child = Children.FirstOrDefault(x =>
-                    {
-                        var atp = x.AttachedProperty<GridProperties>();
-                        return ((atp?.Row ?? 0) == row) && ((atp?.Column ?? 0) == column);
-                    });
+                    var child = Children.FirstOrDefault(x => GetRow(x) == row && GetColumn(x) == column);
                     var nfc = column > 0 ? 1 : 0;
                     var nfr = row > 0 ? 1 : 0;
                     var boundingBox =

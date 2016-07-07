@@ -4,11 +4,33 @@ using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
+using System.Windows.Markup;
 using GoddamnConsole.Controls;
 
 namespace GoddamnConsole.DataBinding
 {
-    internal class Binding
+    public class Binding : MarkupExtension
+    {
+        public Binding(string shit)
+        {
+            _path = shit;
+        }
+
+        private readonly string _path;
+        public BindingMode Mode { get; set; } = BindingMode.OneWay;
+        private BindingInternal _internalBinding;
+
+        public override object ProvideValue(IServiceProvider serviceProvider)
+        {
+            var pvt = (IProvideValueTarget) serviceProvider.GetService(typeof (IProvideValueTarget));
+            var property = (PropertyInfo) pvt.TargetProperty;
+            var target = (IHasDataContext) pvt.TargetObject;
+            _internalBinding = new BindingInternal(target, property, _path, Mode, true);
+            return _internalBinding.Value();
+        }
+    }
+
+    internal class BindingInternal
     {
         private class BindingNode
         {
@@ -20,7 +42,7 @@ namespace GoddamnConsole.DataBinding
             public object[] Indices { get; set; } 
         }
         
-        private readonly Control _control;
+        private readonly IHasDataContext _control;
         private readonly PropertyInfo _property;
         
         private readonly List<BindingNode> _nodes = new List<BindingNode>();
@@ -28,33 +50,58 @@ namespace GoddamnConsole.DataBinding
         private readonly BindingMode _mode;
         private readonly BindingPath _path;
 
-        public Binding(Control control, PropertyInfo property, string path, BindingMode mode, bool strict)
+        public BindingInternal(IHasDataContext control, PropertyInfo property, string path, BindingMode mode, bool strict)
         {
             _path = new BindingPath(path);
             _property = property;
             _control = control;
             _mode = mode;
             _strict = strict;
-            if (mode == BindingMode.OneWayToSource || mode == BindingMode.TwoWay)
-                control.PropertyChanged += OnTargetPropertyChanged;
+            control.PropertyChanged += OnTargetPropertyChanged;
             Refresh();
         }
 
-        private object _lock = new object();
+        private readonly object _lock = new object();
         private BindingNode _changingNode;
+
+        private object GetDataContext(IHasDataContext cont)
+        {
+            return cont.DataContext ?? (cont.ParentContainer != null ? GetDataContext(cont.ParentContainer) : null);
+        }
+
+        public object Value() => Traverse(_path.Nodes, GetDataContext(_control));
 
         private void OnTargetPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
-            var last = _nodes.LastOrDefault();
-            if (last == null) return;
-            lock (_lock)
+            if (e.PropertyName == nameof(IHasDataContext.DataContext) ||
+                e.PropertyName == nameof(IHasDataContext.ParentContainer))
             {
-                _changingNode = last;
-                if (last.Indices == null)
-                    last.Property.SetValue(last.Object, _property.GetValue(_control));
-                else
-                    last.Property.SetValue(last.Object, _property.GetValue(_control), last.Indices);
-                _changingNode = null;
+                Refresh();
+                return;
+            }
+            if (_mode == BindingMode.OneWayToSource || _mode == BindingMode.TwoWay)
+            {
+                var last = _nodes.LastOrDefault();
+                if (last == null) return;
+                lock (_lock)
+                {
+                    try
+                    {
+                        _changingNode = last;
+                        if (last.Indices == null)
+                            last.Property.SetValue(last.Object, _property.GetValue(_control));
+                        else
+                            last.Property.SetValue(last.Object, _property.GetValue(_control), last.Indices);
+                    }
+                    catch
+                    {
+                        if (_strict) throw;
+                    }
+                    finally
+                    {
+                        _changingNode = null;
+                    }
+                }
             }
         }
 
@@ -72,7 +119,7 @@ namespace GoddamnConsole.DataBinding
 
         public void Cleanup(bool unbindTarget = false)
         {
-            if (unbindTarget && (_mode == BindingMode.OneWayToSource || _mode == BindingMode.TwoWay))
+            if (unbindTarget)
                 _control.PropertyChanged -= OnTargetPropertyChanged;
             foreach (var node in _nodes.Where(x => x.PcHandler != null))
             {
@@ -138,6 +185,7 @@ namespace GoddamnConsole.DataBinding
 
         private object Traverse(List<BindingPathNode> nodes, object dc)
         {
+            if (dc == null) return null;
             var rdc = dc;
             try
             {
@@ -219,7 +267,7 @@ namespace GoddamnConsole.DataBinding
         public void Refresh()
         {
             Cleanup();
-            var dc = _control.DataContext;
+            var dc = GetDataContext(_control);
             if (dc == null) return;
             try
             {

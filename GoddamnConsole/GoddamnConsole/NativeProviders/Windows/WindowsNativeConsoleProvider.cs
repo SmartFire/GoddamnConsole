@@ -189,21 +189,25 @@ namespace GoddamnConsole.NativeProviders.Windows
                 var sizeOf = Marshal.SizeOf(typeof(INPUT_RECORD));
                 while (!_threadToken.IsCancellationRequested)
                 {
-                    uint nchars = 0;
-                    Memset(ptr, 0, sizeOf);
-                    ReadConsoleInputW(_stdin, ptr, 1, ref nchars);
-                    if (charBuf->EventType == 1 && nchars == 1 && charBuf->KeyEvent.KeyDown)
+                    try
                     {
-                        KeyPressed?.Invoke(
-                            this,
-                            new KeyPressedEventArgs(new ConsoleKeyInfo(
-                                                        charBuf->KeyEvent.Char,
-                                                        (ConsoleKey) charBuf->KeyEvent.KeyCode,
-                                                        (charBuf->KeyEvent.ControlKeyState & 0x10) > 0,
-                                                        (charBuf->KeyEvent.ControlKeyState & 0x03) > 0,
-                                                        (charBuf->KeyEvent.ControlKeyState & 0x0c) > 0
-                                                        )));
+                        uint nchars = 0;
+                        Memset(ptr, 0, sizeOf);
+                        ReadConsoleInputW(_stdin, ptr, 1, ref nchars);
+                        if (charBuf->EventType == 1 && nchars == 1 && charBuf->KeyEvent.KeyDown)
+                        {
+                            KeyPressed?.Invoke(
+                                this,
+                                new KeyPressedEventArgs(new ConsoleKeyInfo(
+                                                            charBuf->KeyEvent.Char,
+                                                            (ConsoleKey) charBuf->KeyEvent.KeyCode,
+                                                            (charBuf->KeyEvent.ControlKeyState & 0x10) > 0,
+                                                            (charBuf->KeyEvent.ControlKeyState & 0x03) > 0,
+                                                            (charBuf->KeyEvent.ControlKeyState & 0x0c) > 0
+                                                            )));
+                        }
                     }
+                    catch { }
                 }
             });
             _keyboardThread.Start();

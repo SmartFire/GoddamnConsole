@@ -1,14 +1,21 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Reflection;
 using GoddamnConsole.DataBinding;
 
 namespace GoddamnConsole.Controls
 {
-    public abstract partial class Control
+    public interface IHasDataContext : INotifyPropertyChanged
     {
-        private readonly Dictionary<PropertyInfo, Binding> _bindings
-            = new Dictionary<PropertyInfo, Binding>();
+        object DataContext { get; }
+        IHasDataContext ParentContainer { get; }
+    }
+
+    public abstract partial class Control : IHasDataContext
+    {
+        private readonly Dictionary<PropertyInfo, BindingInternal> _bindings
+            = new Dictionary<PropertyInfo, BindingInternal>();
 
         private object _dataContext;
         
@@ -21,33 +28,36 @@ namespace GoddamnConsole.Controls
             set
             {
                 _dataContext = value;
-                foreach (var binding in _bindings.Values) binding.Refresh();
+                OnPropertyChanged();
+                //foreach (var binding in _bindings.Values) binding.Refresh();
             }
         }
-        
+
+        IHasDataContext IHasDataContext.ParentContainer => Parent;
+
         /// <summary>
         /// Binds the element property to the data context
         /// </summary>
-        public void Bind(string propertyName, string bindingPath, BindingMode mode = BindingMode.OneWay)
-        {
-            var property = GetType().GetProperty(propertyName);
-            if (property == null) throw new ArgumentException("Property not found");
-            Unbind(propertyName);
-            _bindings.Add(property, new Binding(this, property, bindingPath, mode, true));
-        }
+        //public void Bind(string propertyName, string bindingPath, BindingMode mode = BindingMode.OneWay)
+        //{
+        //    var property = GetType().GetProperty(propertyName);
+        //    if (property == null) throw new ArgumentException("Property not found");
+        //    Unbind(propertyName);
+        //    _bindings.Add(property, new BindingInternal(this, property, bindingPath, mode, true));
+        //}
 
         /// <summary>
         /// Unbinds the element property
         /// </summary>
         /// <param name="propertyName"></param>
-        public void Unbind(string propertyName)
-        {
-            var property = GetType().GetProperty(propertyName);
-            Binding existingBinding;
-            _bindings.TryGetValue(property, out existingBinding);
-            if (existingBinding == null) return;
-            existingBinding.Cleanup(true);
-            _bindings.Remove(property);
-        }
+        //public void Unbind(string propertyName)
+        //{
+        //    var property = GetType().GetProperty(propertyName);
+        //    BindingInternal existingBinding;
+        //    _bindings.TryGetValue(property, out existingBinding);
+        //    if (existingBinding == null) return;
+        //    existingBinding.Cleanup(true);
+        //    _bindings.Remove(property);
+        //}
     }
 }

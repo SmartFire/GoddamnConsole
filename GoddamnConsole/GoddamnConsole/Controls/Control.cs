@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Reflection;
 using GoddamnConsole.Drawing;
 
 namespace GoddamnConsole.Controls
@@ -110,21 +111,6 @@ namespace GoddamnConsole.Controls
             if (Parent != null)
                 Parent.Invalidate();
             else if (Console.Windows.Contains(this)) Console.Refresh();
-        }
-
-        /// <summary>
-        /// Returns a collection of attached properties
-        /// </summary>
-        public ICollection<IAttachedProperty> AttachedProperties { get; } = new List<IAttachedProperty>();
-
-        /// <summary>
-        /// Returns an attached property with specified type
-        /// </summary>
-        /// <typeparam name="TAttachedProperty">Type of attached property</typeparam>
-        public TAttachedProperty AttachedProperty<TAttachedProperty>()
-            where TAttachedProperty : class, IAttachedProperty
-        {
-            return AttachedProperties.FirstOrDefault(x => x is TAttachedProperty) as TAttachedProperty;
         }
     }
 

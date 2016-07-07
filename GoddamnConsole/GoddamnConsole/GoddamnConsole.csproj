@@ -40,6 +40,8 @@
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Xaml" />
+    <Reference Include="System.XML" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Character.cs" />
@@ -50,6 +52,7 @@
     <Compile Include="Controls\ContentControl.cs" />
     <Compile Include="Controls\ContentWindow.cs" />
     <Compile Include="Controls\Control.cs" />
+    <Compile Include="Controls\ControlAttachedProperties.cs" />
     <Compile Include="Controls\ControlDataBinding.cs" />
     <Compile Include="Controls\ControlEvents.cs" />
     <Compile Include="Controls\ControlParentProcessing.cs" />
@@ -76,6 +79,7 @@
     <Compile Include="NativeProviders\Windows\NativeMethods.cs" />
     <Compile Include="NativeProviders\Windows\WindowsNativeConsoleProvider.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Xaml\XamlServices.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="articles\intro.md" />

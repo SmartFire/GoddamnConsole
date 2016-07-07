@@ -120,6 +120,7 @@ namespace GoddamnConsole.Drawing
 
         public override void DrawText(Rectangle rect, string text, TextOptions opts = null)
         {
+            if (string.IsNullOrWhiteSpace(text)) return;
             var maxWid = rect.Width + rect.X - rect.X;
             IEnumerable<string> lines = text.Replace("\r\n", "\n").Split(new[] {'\n'}, StringSplitOptions.None);
             lines = (opts?.TextWrapping ?? TextWrapping.NoWrap) == TextWrapping.Wrap
