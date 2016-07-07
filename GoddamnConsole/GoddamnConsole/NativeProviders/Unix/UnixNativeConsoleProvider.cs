@@ -32,6 +32,7 @@ namespace GoddamnConsole.NativeProviders.Unix
                 var oldh = Syscon.WindowHeight;
                 while (!_cts.IsCancellationRequested)
                 {
+                    Thread.Sleep(16);
                     var neww = Syscon.WindowWidth;
                     var newh = Syscon.WindowHeight;
                     if (neww != oldw || newh != oldh)
@@ -51,7 +52,6 @@ namespace GoddamnConsole.NativeProviders.Unix
                         oldw = neww;
                         oldh = newh;
                     }
-                    Thread.Sleep(16);
                 }
             }) { Priority = ThreadPriority.Lowest}.Start();
             new Thread(() => // keyboard monitor

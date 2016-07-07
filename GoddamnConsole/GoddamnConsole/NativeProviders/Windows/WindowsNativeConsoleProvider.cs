@@ -153,6 +153,7 @@ namespace GoddamnConsole.NativeProviders.Windows
             {
                 while (!_threadToken.IsCancellationRequested)
                 {
+                    Thread.Sleep(16);
                     var info = new CONSOLE_SCREEN_BUFFER_INFO();
                     GetConsoleScreenBufferInfo(_stdout, ref info);
                     int nw = info.Window.Right - info.Window.Left + 1,
@@ -179,7 +180,6 @@ namespace GoddamnConsole.NativeProviders.Windows
                         /* Do not care if subscriber fucked up */
                     }
                     //Refresh();
-                    Thread.Sleep(16);
                 }
             }) {Priority = ThreadPriority.Lowest}.Start();
             _keyboardThread = new Thread(() => // keyboard monitor
