@@ -271,7 +271,9 @@ namespace GoddamnConsole.DataBinding
             if (dc == null) return;
             try
             {
-                _property.SetValue(_control, Traverse(_path.Nodes, dc));
+                var val = Traverse(_path.Nodes, dc);
+                if (_property.PropertyType == typeof (string) && !(val is string)) val = val.ToString();
+                _property.SetValue(_control, val);
             }
             catch
             {

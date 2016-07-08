@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Windows.Markup;
 using GoddamnConsole.Drawing;
 
 namespace GoddamnConsole.Controls
@@ -9,9 +10,11 @@ namespace GoddamnConsole.Controls
     /// <summary>
     /// Represents a control, which can have more than one child
     /// </summary>
+    [ContentProperty(nameof(Children))]
     public class ChildrenControl : ParentControl, IChildrenControl
     {
-        private class ChildrenCollection : IList<Control>
+        [ContentWrapper(typeof(Control))]
+        public class ChildrenCollection : IList<Control>, IList, IReadOnlyList<Control>
         {
             public ChildrenCollection(ChildrenControl parent)
             {
@@ -45,6 +48,17 @@ namespace GoddamnConsole.Controls
                 _parent.Invalidate();
             }
 
+            public int Add(object value)
+            {
+                Add((Control)value);
+                return Count - 1;
+            }
+
+            public bool Contains(object value)
+            {
+                return _internal.Contains((Control)value);
+            }
+
             public void Clear()
             {
                 var copy = _internal.ToArray();
@@ -54,6 +68,21 @@ namespace GoddamnConsole.Controls
                     _parent.ChildRemoved?.Invoke(_parent, new ChildRemovedEventArgs(item));
                 }
                 _parent.Invalidate();
+            }
+
+            public int IndexOf(object value)
+            {
+                return value is Control ? _internal.IndexOf((Control)value) : -1;
+            }
+
+            public void Insert(int index, object value)
+            {
+                Insert(index, (Control)value);
+            }
+
+            public void Remove(object value)
+            {
+                Remove((Control)value);
             }
 
             public bool Contains(Control item)
@@ -75,8 +104,16 @@ namespace GoddamnConsole.Controls
                 return true;
             }
 
+            public void CopyTo(Array array, int index)
+            {
+                ((IList)_internal).CopyTo(array, index);
+            }
+
             public int Count => _internal.Count;
-            public bool IsReadOnly { get; } = false;
+            public object SyncRoot => ((ICollection)_internal).SyncRoot;
+            public bool IsSynchronized => ((ICollection)_internal).IsSynchronized;
+            public bool IsReadOnly => false;
+            public bool IsFixedSize => false;
 
             public int IndexOf(Control item)
             {
@@ -85,6 +122,14 @@ namespace GoddamnConsole.Controls
 
             public void Insert(int index, Control item)
             {
+                if (item.Name != null &&
+                    _parent.AllControls.Any(x => x.Name == item.Name))
+                    throw new Exception("Control with exact name already exists");
+                if (item.Parent != _parent)
+                {
+                    item.Parent = _parent;
+                    return;
+                }
                 _internal.Insert(index, item);
             }
 
@@ -93,10 +138,31 @@ namespace GoddamnConsole.Controls
                 _internal.RemoveAt(index);
             }
 
+            object IList.this[int index]
+            {
+                get { return _internal[index]; }
+                set { this[index] = (Control)value; }
+            }
+
             public Control this[int index]
             {
                 get { return _internal[index]; }
-                set { _internal[index] = value; }
+                set
+                {
+                    var pv = _internal[index];
+                    _parent.ChildRemoved?.Invoke(_parent, new ChildRemovedEventArgs(_internal[index]));
+                    _parent.Invalidate();
+                    if (value.Name != null &&
+                        _parent.AllControls.Any(x => x.Name == value.Name))
+                        throw new Exception("Control with exact name already exists");
+                    if (value.Parent != _parent)
+                    {
+                        value.Parent = _parent;
+                        _internal.Remove(pv);
+                        return;
+                    }
+                    _internal[index] = value;
+                }
             }
         }
 
@@ -117,7 +183,8 @@ namespace GoddamnConsole.Controls
 
         public override bool IsChildVisible(Control child) => true;
 
-        public IList<Control> Children { get; }
+        public ChildrenCollection Children { get; }
+        IList<Control> IChildrenControl.Children => Children; 
         public virtual IList<Control> FocusableChildren => Children;
         public event EventHandler<ChildRemovedEventArgs> ChildRemoved;
     }

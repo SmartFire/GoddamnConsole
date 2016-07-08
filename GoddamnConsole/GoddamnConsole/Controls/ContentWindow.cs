@@ -1,18 +1,14 @@
 ﻿using System;
 using System.Linq;
+using System.Windows.Markup;
 using GoddamnConsole.Drawing;
 
 namespace GoddamnConsole.Controls
 {
+    [ContentProperty(nameof(Content))]
     public class ContentWindow : WindowBase, IContentControl
     {
         public override Size BoundingBoxReduction => new Size(2, 2);
-
-        public override ParentControl Parent
-        {
-            get { return null; }
-            set { throw new NotSupportedException(); }
-        }
 
         //public override int MaxHeight
         //{

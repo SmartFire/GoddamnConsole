@@ -12,7 +12,6 @@ namespace GoddamnConsole.Controls
         [AlsoNotifyFor(nameof(ActualWidth))]
         [AlsoNotifyFor(nameof(ActualHeight))]
         [AlsoNotifyFor(nameof(ActualVisibility))]
-        [AlsoNotifyFor(nameof(IHasDataContext.ParentContainer))]
         public virtual ParentControl Parent
         {
             get { return _parent; }
@@ -51,6 +50,7 @@ namespace GoddamnConsole.Controls
                     throw;
                 }
                 OnPropertyChanged();
+                NotifyParentContainerChanged();
             }
         }
 
@@ -112,5 +112,14 @@ namespace GoddamnConsole.Controls
         /// Occurs when this control was removed from parent, or parent has been changed
         /// </summary>
         public event EventHandler DetachedFromParent;
+
+        private void NotifyParentContainerChanged()
+        {
+            OnPropertyChanged(nameof(IHasDataContext.ParentContainer));
+            foreach (var child in LogicalChildren)
+            {
+                child.NotifyParentContainerChanged();
+            }
+        }
     }
 }

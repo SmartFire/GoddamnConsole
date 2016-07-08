@@ -1,0 +1,73 @@
+﻿<l:ControlsTest xmlns="clr-namespace:GoddamnConsole.Controls;assembly=GoddamnConsole"
+                xmlns:b="clr-namespace:GoddamnConsole.DataBinding;assembly=GoddamnConsole"
+                xmlns:l="clr-namespace:GoddamnConsoleSample"
+                xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                x:Class="GoddamnConsoleSample.ControlsTest"
+                Title="ContentWindow + TabControl2 Test (Prev: Shift+Tab)">
+    <TabControl>
+        <Tab Title="TextView">
+            <TextView Text="{b:Binding TextViewText}"/>
+        </Tab>
+        <Tab Title="Vertical StackPanel">
+            <StackPanel Orientation="Vertical">
+                <Border Height="MaxByContent">
+                    <TextView Text="Item 1" Height="MaxByContent"/>
+                </Border>
+                <Border Height="MaxByContent">
+                    <TextView Text="Item 2" Height="MaxByContent"/>
+                </Border>
+                <Border Height="MaxByContent">
+                    <TextView Text="Item 3" Height="MaxByContent"/>
+                </Border>
+                <Border Height="MaxByContent">
+                    <TextView Text="Item 4" Height="MaxByContent"/>
+                </Border>
+            </StackPanel>
+        </Tab>
+        <Tab Title="Horizontal StackPanel">
+            <StackPanel Orientation="Horizontal">
+                <Border Width="MaxByContent">
+                    <TextView Text="Item 1" Width="MaxByContent"/>
+                </Border>
+                <Border Width="MaxByContent">
+                    <TextView Text="Item 2" Width="MaxByContent"/>
+                </Border>
+                <Border Width="MaxByContent">
+                    <TextView Text="Item 3" Width="MaxByContent"/>
+                </Border>
+                <Border Width="MaxByContent">
+                    <TextView Text="Item 4" Width="MaxByContent"/>
+                </Border>
+            </StackPanel>
+        </Tab>
+        <Tab Title="ScrollViewer">
+            <ScrollViewer>
+                <TextView Text="{b:Binding ScrollViewerText}" Height="MaxByContent"/>
+            </ScrollViewer>
+        </Tab>
+        <Tab Title="TextBox + Binding">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <GridSize UnitType="Grow"/>
+                    <GridSize UnitType="Grow"/>
+                </Grid.RowDefinitions>
+                <ContentWindow Grid.Row="0" Title="TextBox">
+                    <TextBox Text="{b:Binding TextBoxText, Mode=TwoWay}"/>
+                </ContentWindow>
+                <ContentWindow Grid.Row="1" Title="TextView (bound to TextBox)">
+                    <TextView Text="{b:Binding TextBoxText, Mode=TwoWay}"/>
+                </ContentWindow>
+            </Grid>
+        </Tab>
+        <Tab Title="Button">
+            <StackPanel Orientation="Vertical">
+                <TextView Text="Press that" Height="MaxByContent"/>
+                <Button Text="Press me" Height="MaxByContent" Clicked="ButtonClicked"/>
+                <StackPanel Orientation="Horizontal" Height="MaxByContent">
+                    <TextView Text="Click count: " Width="MaxByContent"/>
+                    <TextView Text="{b:Binding ClickCount}" Width="MaxByContent"/>
+                </StackPanel>
+            </StackPanel>
+        </Tab>
+    </TabControl>
+</l:ControlsTest>

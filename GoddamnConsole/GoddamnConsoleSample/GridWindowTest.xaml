@@ -1,0 +1,29 @@
+﻿<l:GridWindowTest xmlns="clr-namespace:GoddamnConsole.Controls;assembly=GoddamnConsole"
+                  xmlns:l="clr-namespace:GoddamnConsoleSample"
+                  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                  x:Class="GoddamnConsoleSample.GridWindowTest"
+                  Title="GridWindow Test (Next: Shift+Tab)"
+                  DrawBorders="True">
+    <l:GridWindowTest.RowDefinitions>
+        <GridSize UnitType="Fixed" Value="10"/>
+        <GridSize UnitType="Auto" Value="1"/>
+        <GridSize UnitType="Auto" Value="1"/>
+    </l:GridWindowTest.RowDefinitions>
+    <l:GridWindowTest.ColumnDefinitions>
+        <GridSize UnitType="Grow" Value="3"/>
+        <GridSize UnitType="Grow" Value="2"/>
+        <GridSize UnitType="Fixed" Value="15"/>
+    </l:GridWindowTest.ColumnDefinitions>
+    <Border Grid.RowSpan="3">
+        <TextView Text="1"/>
+    </Border>
+    <Border Grid.ColumnSpan="2" Grid.Column="1">
+        <TextView Text="2"/>
+    </Border>
+    <Border Grid.Row="1" Grid.Column="1">
+        <TextView Text="3"/>
+    </Border>
+    <Border Grid.Row="2" Grid.Column="2">
+        <TextView Text="4"/>
+    </Border>
+</l:GridWindowTest>

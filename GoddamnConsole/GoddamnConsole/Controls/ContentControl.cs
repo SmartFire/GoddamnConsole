@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Windows.Markup;
 using GoddamnConsole.Drawing;
 
 namespace GoddamnConsole.Controls
@@ -7,6 +8,7 @@ namespace GoddamnConsole.Controls
     /// <summary>
     /// Represents a control, which can have only one child
     /// </summary>
+    [ContentProperty(nameof(Content))]
     public abstract class ContentControl : ParentControl, IContentControl
     {
         private Control _content;

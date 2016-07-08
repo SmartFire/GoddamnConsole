@@ -106,7 +106,7 @@ namespace GoddamnConsole.Drawing
         {
             var ptY = point.Y + _scrollY;
             if (ptY < 0 || ptY >= _height) return;
-            line = Regex.Replace(line, "[\r\n\t\f]", " ");
+            line = Regex.Replace(line, "[\r\n\t\f\x85]", " ");
             for (int x = point.X, i = 0; x < Math.Min(line.Length, _width - point.X - _scrollX) + point.X; x++, i++)
             {
                 PutChar(
@@ -122,7 +122,7 @@ namespace GoddamnConsole.Drawing
         {
             if (string.IsNullOrWhiteSpace(text)) return;
             var maxWid = rect.Width + rect.X - rect.X;
-            IEnumerable<string> lines = text.Replace("\r\n", "\n").Split(new[] {'\n'}, StringSplitOptions.None);
+            IEnumerable<string> lines = text.Replace("\r\n", "\n").Split(new[] {'\n', '\x85'}, StringSplitOptions.None);
             lines = (opts?.TextWrapping ?? TextWrapping.NoWrap) == TextWrapping.Wrap
                 ? lines.SelectMany(x => x.Split(maxWid/* -_scrollX*/)) // wrapped text shouldn't be influenced by scrolling 
                 : lines.Select(x => x.Length > maxWid - _scrollX ? x.Remove(maxWid - _scrollX) : x);

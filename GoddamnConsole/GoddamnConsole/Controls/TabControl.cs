@@ -53,6 +53,8 @@ namespace GoddamnConsole.Controls
 
         protected override void OnRender(DrawingContext context)
         {
+            if (SelectedTab == null)
+                if (Children.Count > 0) SelectedIndex = 0; 
             var style = Console.Focused == this
                             ? FrameStyle.Double
                             : FrameStyle.Single;

@@ -1,11 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Globalization;
 using System.Linq;
 using System.Xaml;
 using GoddamnConsole.Drawing;
-using static GoddamnConsole.Drawing.FrameOptions;
 
 namespace GoddamnConsole.Controls
 {
@@ -81,181 +78,26 @@ namespace GoddamnConsole.Controls
         /// Returns a collection of column definitions
         /// </summary>
         public IList<GridSize> ColumnDefinitions { get; } = new List<GridSize>();
-        
-        private int[] MeasureSizes(bool measureColumns)
-        {
-            var boxSize = measureColumns ? ActualWidth : ActualHeight;
-            var definitions = measureColumns ? ColumnDefinitions : RowDefinitions;
-            if (definitions.Count == 0)
-                definitions = new[]
-                {
-                    new GridSize(GridUnitType.Auto, 0)
-                };
-            var sizes = new long[definitions.Count];
-            for (var i = 0; i < definitions.Count; i++)
-            {
-                switch (definitions[i].UnitType)
-                {
-                    case GridUnitType.Auto:
-                        var children =
-                            Children.Where(x => measureColumns ? GetColumn(x) == i : GetRow(x) == i).ToArray();
-                        if (children.Length > 0)
-                            sizes[i] =
-                                measureColumns
-                                    ? children.Max(
-                                        x =>
-                                        x.Width.Type != ControlSizeType.BoundingBoxSize
-                                            ? x.ActualWidth + (DrawBorders ? i == 0 ? 2 : 1 : 0)
-                                            : long.MaxValue)
-                                    : children.Max(
-                                        x =>
-                                        x.Height.Type != ControlSizeType.BoundingBoxSize
-                                            ? x.ActualHeight + (DrawBorders ? i == 0 ? 2 : 1 : 0)
-                                            : long.MaxValue);
-                        else sizes[i] = 0;
-                        break;
-                    case GridUnitType.Fixed:
-                        sizes[i] = definitions[i].Value + (DrawBorders ? i == 0 ? 2 : 1 : 0);
-                        break;
-                    case GridUnitType.Grow:
-                        break; // process later
-                }
-            }
-            var remaining = boxSize - sizes.Sum(x => x != long.MaxValue ? x : 0);
-            var alignedToBox = sizes.Count(x => x == long.MaxValue);
-            if (alignedToBox > 0)
-            {
-                var size = remaining / alignedToBox;
-                var first = true;
-                for (var i = 0; i < sizes.Length; i++)
-                {
-                    if (sizes[i] == long.MaxValue)
-                    {
-                        if (first)
-                        {
-                            sizes[i] = size + remaining % alignedToBox;
-                            first = false;
-                        }
-                        else sizes[i] = size;
-                    }
-                }
-            }
-            else if (remaining > 0)
-            {
-                var totalGrowRate = definitions.Sum(x => x.UnitType == GridUnitType.Grow ? x.Value : 0);
-                if (totalGrowRate > 0)
-                {
-                    var growUnit = remaining / totalGrowRate;
-                    var first = true;
-                    for (var i = 0; i < sizes.Length; i++)
-                    {
-                        if (definitions[i].UnitType == GridUnitType.Grow)
-                        {
-                            if (first)
-                            {
-                                sizes[i] = definitions[i].Value * growUnit + remaining % growUnit;
-                                first = false;
-                            }
-                            else sizes[i] = definitions[i].Value * growUnit;
-                        }
-                    }
-                }
-            }
-            else
-            {
-                for (var i = 0; i < sizes.Length; i++) if (sizes[i] < 0) sizes[i] = 0;
-            }
-            return sizes.Select(x => (int) x).ToArray();
-        }
 
         public override Rectangle MeasureBoundingBox(Control child)
         {
-            if (!Children.Contains(child)) return new Rectangle(0, 0, 0, 0);
-            var rows = MeasureSizes(false);
-            var columns = MeasureSizes(true);
-            var row = Math.Max(0, Math.Min(GetRow(child), rows.Length));
-            var column = Math.Max(0, Math.Min(GetColumn(child), columns.Length));
-            var rowSpan = Math.Max(1, Math.Min(GetRowSpan(child), rows.Length - row));
-            var columnSpan = Math.Max(1, Math.Min(GetColumnSpan(child), columns.Length - column));
-            var x = columns.Take(column).Sum();
-            var y = rows.Take(row).Sum();
-            var w = columns.Skip(column).Take(columnSpan).Sum();
-            var h = rows.Skip(row).Take(rowSpan).Sum();
-            if (DrawBorders)
-            {
-                var nfc = column > 0 ? 1 : 0;
-                var nfr = row > 0 ? 1 : 0;
-                return new Rectangle(x + 1 - nfc, y + 1 - nfr, w - 2 + nfc, h - 2 + nfr);
-            }
-            return new Rectangle(x, y, w, h);
-        }
-
-        private bool HasSpanningChildren(int row, int column, bool vertical)
-        {
-            return
-                vertical
-                    ? Children.Any(x =>
-                    {
-                        var xrow = GetRow(x);
-                        var xcol = GetColumn(x);
-                        return (xrow <= row) && (xcol == column) &&
-                               (xrow + GetRowSpan(x) - 1 > row);
-                    })
-                    : Children.Any(x =>
-                    {
-                        var xrow = GetRow(x);
-                        var xcol = GetColumn(x);
-                        return (xrow == row) && (xcol <= column) &&
-                               (xcol + GetColumnSpan(x) - 1 > column);
-                    });
+            return GridInternal.MeasureBoundingBox(
+                Children, child, DrawBorders, ActualWidth, ActualHeight, 
+                ColumnDefinitions, RowDefinitions, 0, 0);
         }
 
         protected override void OnRender(DrawingContext dc)
         {
-            var rows = MeasureSizes(false);
-            var columns = MeasureSizes(true);
-            if (!DrawBorders) return;
-            for (var column = 0; column < Math.Max(1, ColumnDefinitions.Count); column++)
-                for (var row = 0; row < Math.Max(1, RowDefinitions.Count); row++)
-                {
-                    var child = Children.FirstOrDefault(x => GetRow(x) == row && GetColumn(x) == column);
-                    var nfc = column > 0 ? 1 : 0;
-                    var nfr = row > 0 ? 1 : 0;
-                    var boundingBox =
-                        child != null
-                            ? MeasureBoundingBox(child).Offset(-1, -1).Expand(2, 2)
-                            : HasSpanningChildren(row - 1, column, true)
-                                  ? new Rectangle(0, 0, 0, 0)
-                                  : HasSpanningChildren(row, column - 1, false)
-                                        ? new Rectangle(0, 0, 0, 0)
-                                        : new Rectangle(columns.Take(column).Sum() - nfc,
-                                                        rows.Take(row).Sum() - nfr,
-                                                        columns[column] + nfc,
-                                                        rows[row] + nfr);
-                    dc.DrawFrame(boundingBox, new FrameOptions
-                    {
-                        Foreground = Foreground,
-                        Background = Background
-                    });
-                    if (column > 0 || row > 0)
-                        dc.PutChar(new Point(boundingBox.X, boundingBox.Y),
-                                   column > 0
-                                       ? row > 0 && !HasSpanningChildren(row - 1, column - 1, false)
-                                             ? !HasSpanningChildren(row - 1, column - 1, true)
-                                                   ? Piece(FramePiece.Cross, FrameStyle.Single)
-                                                   : Piece(FramePiece.Vertical | FramePiece.Right, FrameStyle.Single)
-                                             : Piece(FramePiece.Horizontal | FramePiece.Bottom, FrameStyle.Single)
-                                       : Piece(FramePiece.Vertical | FramePiece.Right, FrameStyle.Single),
-                                   Foreground, Background, CharAttribute.None);
-                    if (column == Math.Max(1, ColumnDefinitions.Count) - 1 && row > 0)
-                        dc.PutChar(new Point(boundingBox.X + boundingBox.Width - 1, boundingBox.Y),
-                                   Piece(FramePiece.Vertical | FramePiece.Left, FrameStyle.Single),
-                                   Foreground, Background, CharAttribute.None);
-                    if (row == Math.Max(1, RowDefinitions.Count) - 1 && column > 0)
-                        dc.PutChar(new Point(boundingBox.X, boundingBox.Y + boundingBox.Height - 1),
-                                   Piece(FramePiece.Horizontal | FramePiece.Top, FrameStyle.Single),
-                                   Foreground, Background, CharAttribute.None);
-                }
+            if (DrawBorders)
+                GridInternal.Render(
+                    dc,
+                    Background,
+                    Foreground,
+                    FrameStyle.Single,
+                    Children,
+                    ColumnDefinitions, RowDefinitions,
+                    ActualWidth, ActualHeight,
+                    0, 0);
         }
     }
 

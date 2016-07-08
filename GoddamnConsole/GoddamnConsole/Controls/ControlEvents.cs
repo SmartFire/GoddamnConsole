@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using GoddamnConsole.Drawing;
 using GoddamnConsole.NativeProviders;
@@ -175,8 +176,8 @@ namespace GoddamnConsole.Controls
             var cancelInvalidation = false;
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
             var prop = GetType().GetProperty(propertyName ?? "");
-            cancelInvalidation |=
-                prop?.CustomAttributes.Any(x => x.AttributeType == typeof(NoInvalidateOnChangeAttribute)) ?? false;
+            cancelInvalidation |= (prop == null) ||
+                (prop?.CustomAttributes.Any(x => x.AttributeType == typeof(NoInvalidateOnChangeAttribute)) ?? false);
             foreach (var alsoNotifyFor in
                 (prop?.GetCustomAttributes(typeof (AlsoNotifyForAttribute), true) ??
                  new object[0]).Cast<AlsoNotifyForAttribute>())

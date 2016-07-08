@@ -1,10 +1,6 @@
-﻿using System.Collections.ObjectModel;
-using System.ComponentModel;
-using System.Runtime.CompilerServices;
+﻿using System.Collections;
+using System.Collections.Generic;
 using GoddamnConsole;
-using GoddamnConsole.Controls;
-using GoddamnConsole.DataBinding;
-using GoddamnConsole.Drawing;
 using GoddamnConsole.Xaml;
 
 namespace BindingSample

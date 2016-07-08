@@ -224,6 +224,7 @@ namespace GoddamnConsole.Controls
 
         protected override void OnRender(DrawingContext context)
         {
+            if (Text == null) return;
             var so = new Point(TextWrapping == TextWrapping.Wrap ? 0 : (int) _scrollX, (int) _scrollY);
             var cpos =
                 _measurement.CaretPosition(_caretPos);

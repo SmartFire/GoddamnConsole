@@ -1,4 +1,5 @@
 ﻿using System.Linq;
+using System.Windows.Markup;
 using GoddamnConsole.Drawing;
 
 namespace GoddamnConsole.Controls
@@ -6,6 +7,7 @@ namespace GoddamnConsole.Controls
     /// <summary>
     /// Represents a read-only text area
     /// </summary>
+    [ContentProperty(nameof(Text))]
     public class TextView : Control
     {
         private TextWrapping _textWrapping = TextWrapping.Wrap;

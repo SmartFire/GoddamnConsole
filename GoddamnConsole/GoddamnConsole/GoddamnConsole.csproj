@@ -58,6 +58,7 @@
     <Compile Include="Controls\ControlParentProcessing.cs" />
     <Compile Include="Controls\ControlSizeMeasurement.cs" />
     <Compile Include="Controls\Grid.cs" />
+    <Compile Include="Controls\GridInternal.cs" />
     <Compile Include="Controls\GridWindow.cs" />
     <Compile Include="Controls\Interfaces.cs" />
     <Compile Include="Controls\ParentControl.cs" />
