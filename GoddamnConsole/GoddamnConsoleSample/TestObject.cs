@@ -2,9 +2,8 @@
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
-namespace BindingSample
+namespace GoddamnConsoleSample
 {
-
     class TestObject : INotifyPropertyChanged
     {
         private int _step;

@@ -3,7 +3,7 @@
                 xmlns:l="clr-namespace:GoddamnConsoleSample"
                 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                 x:Class="GoddamnConsoleSample.ControlsTest"
-                Title="ContentWindow + TabControl2 Test (Prev: Shift+Tab)">
+                Title="ContentWindow + TabControl2 Test (Next: Shift+Tab)">
     <TabControl>
         <Tab Title="TextView">
             <TextView Text="{b:Binding TextViewText}"/>
@@ -59,14 +59,16 @@
                 </ContentWindow>
             </Grid>
         </Tab>
-        <Tab Title="Button">
+        <Tab Title="Button + ProgressBar">
             <StackPanel Orientation="Vertical">
                 <TextView Text="Press that" Height="MaxByContent"/>
                 <Button Text="Press me" Height="MaxByContent" Clicked="ButtonClicked"/>
-                <StackPanel Orientation="Horizontal" Height="MaxByContent">
+                <StackPanel Orientation="Horizontal" Height="1">
                     <TextView Text="Click count: " Width="MaxByContent"/>
                     <TextView Text="{b:Binding ClickCount}" Width="MaxByContent"/>
                 </StackPanel>
+                <ProgressBar MaxValue="100" Position="{b:Binding ClickCount}"
+                             Height="3" DisplayMode="Position"/>
             </StackPanel>
         </Tab>
     </TabControl>

@@ -1,13 +1,13 @@
 ﻿using System;
 using GoddamnConsole.Controls;
 
-namespace BindingSample
+namespace GoddamnConsoleSample
 {
-    public class MainWindow : GridWindow
+    public class BindingTest : GridWindow
     {
         private readonly TestObject _obj;
 
-        public MainWindow()
+        public BindingTest()
         {
             DataContext = _obj = new TestObject();
         }

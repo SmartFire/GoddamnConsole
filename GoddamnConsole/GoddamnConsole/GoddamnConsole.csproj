@@ -62,6 +62,7 @@
     <Compile Include="Controls\GridWindow.cs" />
     <Compile Include="Controls\Interfaces.cs" />
     <Compile Include="Controls\ParentControl.cs" />
+    <Compile Include="Controls\ProgressBar.cs" />
     <Compile Include="Controls\ScrollViewer.cs" />
     <Compile Include="Controls\StackPanel.cs" />
     <Compile Include="Controls\TabControl.cs" />

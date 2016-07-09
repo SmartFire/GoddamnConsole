@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Xaml;
 using GoddamnConsole.Drawing;
@@ -73,11 +72,11 @@ namespace GoddamnConsole.Controls
         /// <summary>
         /// Returns a collection of row definitions
         /// </summary>
-        public IList<GridSize> RowDefinitions { get; } = new List<GridSize>();
+        public GridSizeList RowDefinitions { get; } = new GridSizeList();
         /// <summary>
         /// Returns a collection of column definitions
         /// </summary>
-        public IList<GridSize> ColumnDefinitions { get; } = new List<GridSize>();
+        public GridSizeList ColumnDefinitions { get; } = new GridSizeList();
 
         public override Rectangle MeasureBoundingBox(Control child)
         {

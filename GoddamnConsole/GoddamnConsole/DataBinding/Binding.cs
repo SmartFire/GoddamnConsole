@@ -5,6 +5,8 @@ using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
 using System.Windows.Markup;
+using System.Xaml;
+using System.Xaml.Schema;
 using GoddamnConsole.Controls;
 
 namespace GoddamnConsole.DataBinding
@@ -272,7 +274,13 @@ namespace GoddamnConsole.DataBinding
             try
             {
                 var val = Traverse(_path.Nodes, dc);
-                if (_property.PropertyType == typeof (string) && !(val is string)) val = val.ToString();
+                if (!_property.PropertyType.IsInstanceOfType(val))
+                {
+                    var xt = new XamlType(_property.PropertyType, new XamlSchemaContext());
+                    var tc = xt.TypeConverter;
+                    if (tc == null) throw new InvalidCastException();
+                    val = tc.ConverterInstance.ConvertTo(val, _property.PropertyType);
+                }
                 _property.SetValue(_control, val);
             }
             catch

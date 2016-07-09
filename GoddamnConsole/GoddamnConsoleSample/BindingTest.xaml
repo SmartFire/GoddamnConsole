@@ -1,14 +1,14 @@
-﻿<l:MainWindow xmlns="clr-namespace:GoddamnConsole.Controls;assembly=GoddamnConsole"
+﻿<l:BindingTest xmlns="clr-namespace:GoddamnConsole.Controls;assembly=GoddamnConsole"
               xmlns:b="clr-namespace:GoddamnConsole.DataBinding;assembly=GoddamnConsole"
-              xmlns:l="clr-namespace:BindingSample"
               xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-              x:Class="BindingSample.MainWindow"
-              Title="Binding Sample (XAML Powered)">
-    <l:MainWindow.RowDefinitions>
+              xmlns:l="clr-namespace:GoddamnConsoleSample"
+              x:Class="GoddamnConsoleSample.BindingTest"
+              Title="Binding Test (Next: Shift+Tab)">
+    <l:BindingTest.RowDefinitions>
         <GridSize UnitType="Auto" Value="1"/>
         <GridSize UnitType="Auto" Value="1"/>
         <GridSize UnitType="Auto" Value="1"/>
-    </l:MainWindow.RowDefinitions>
+    </l:BindingTest.RowDefinitions>
     <TextView Height="MaxByContent"
               Grid.Row="0">
         Press button below 6 times. If binding works properly, you will see that value is incremented&#x85;
@@ -20,4 +20,4 @@
     <TextView Text="{b:Binding Property1.Property2[Property3].Property4}"
               Height="MaxByContent"
               Grid.Row="2"/>
-</l:MainWindow>
+</l:BindingTest>
