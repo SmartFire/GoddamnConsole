@@ -42,7 +42,8 @@ namespace GoddamnConsole.Controls
             set { _displayMode = value; OnPropertyChanged(); }
         }
 
-        public override int MaxHeight => 3;
+        protected override int MaxHeightByContent => 3;
+        protected override int MaxWidthByContent => 3;
 
         protected override void OnRender(DrawingContext dc)
         {

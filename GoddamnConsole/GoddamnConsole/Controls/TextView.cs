@@ -13,10 +13,10 @@ namespace GoddamnConsole.Controls
         private TextWrapping _textWrapping = TextWrapping.Wrap;
         private string _text;
 
-        public override int MaxWidth
+        protected override int MaxWidthByContent
             => DrawingContext.MeasureText(_text ?? "").Max();
 
-        public override int MaxHeight
+        protected override int MaxHeightByContent
             => _textWrapping == TextWrapping.Wrap
                    ? DrawingContext.MeasureWrappedText(_text ?? "", ActualWidth).Height
                    : DrawingContext.MeasureText(_text ?? "").Count();

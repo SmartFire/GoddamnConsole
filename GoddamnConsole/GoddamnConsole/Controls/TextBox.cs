@@ -144,6 +144,9 @@ namespace GoddamnConsole.Controls
             }
         }
 
+        protected override int MaxWidthByContent => 0;
+        protected override int MaxHeightByContent => 0;
+
         private TextMeasurement _measurement;
         private int _caretPos;
         private long _scrollX;

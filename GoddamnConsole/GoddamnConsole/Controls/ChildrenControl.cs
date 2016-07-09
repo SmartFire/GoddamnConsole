@@ -11,7 +11,7 @@ namespace GoddamnConsole.Controls
     /// Represents a control, which can have more than one child
     /// </summary>
     [ContentProperty(nameof(Children))]
-    public class ChildrenControl : ParentControl, IChildrenControl
+    public abstract class ChildrenControl : ParentControl, IChildrenControl
     {
         [ContentWrapper(typeof(Control))]
         public class ChildrenCollection : IList<Control>, IList, IReadOnlyList<Control>

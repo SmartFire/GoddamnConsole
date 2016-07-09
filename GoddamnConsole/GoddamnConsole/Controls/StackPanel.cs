@@ -13,8 +13,14 @@ namespace GoddamnConsole.Controls
             if (Orientation == StackPanelOrientation.Vertical)
             {
                 var yofs =
-                    Children.TakeWhile(x => x != child)
-                            .Sum(x => x.Height.Type == ControlSizeType.BoundingBoxSize ? 0 : x.ActualHeight);
+                    (int)
+                    Math.Min(int.MaxValue,
+                             Children.TakeWhile(x => x != child)
+                                     .Sum(
+                                         x =>
+                                         x.Height.Type == ControlSizeType.BoundingBoxSize
+                                             ? (long) x.MeasureHeight(ControlSizeType.MaxByContent)
+                                             : x.ActualHeight));
                 if (yofs > ActualHeight) return new Rectangle(0, 0, 0, 0);
                 return
                     new Rectangle(
@@ -27,12 +33,18 @@ namespace GoddamnConsole.Controls
                                 : child.ActualWidth),
                         Math.Min(ActualHeight - yofs,
                                  child.Height.Type == ControlSizeType.BoundingBoxSize
-                                     ? 0
+                                     ? child.MeasureHeight(ControlSizeType.MaxByContent)
                                      : child.ActualHeight));
             }
             var xofs =
-                Children.TakeWhile(x => x != child)
-                        .Sum(x => x.Width.Type == ControlSizeType.BoundingBoxSize ? 0 : x.ActualWidth);
+                (int)
+                Math.Min(int.MaxValue,
+                         Children.TakeWhile(x => x != child)
+                                 .Sum(
+                                     x =>
+                                     x.Width.Type == ControlSizeType.BoundingBoxSize
+                                         ? (long) x.MeasureWidth(ControlSizeType.MaxByContent)
+                                         : x.ActualWidth));
             if (xofs > ActualWidth) return new Rectangle(0, 0, 0, 0);
             return
                 new Rectangle(
@@ -41,7 +53,7 @@ namespace GoddamnConsole.Controls
                     Math.Min(
                         ActualWidth - xofs,
                         child.Width.Type == ControlSizeType.BoundingBoxSize
-                            ? 0
+                            ? child.MeasureWidth(ControlSizeType.MaxByContent)
                             : child.ActualWidth),
                     Math.Min(ActualHeight,
                              child.Height.Type == ControlSizeType.BoundingBoxSize
@@ -54,6 +66,16 @@ namespace GoddamnConsole.Controls
             get { return _orientation; }
             set { _orientation = value; OnPropertyChanged(); }
         }
+
+        protected override int MaxHeightByContent =>
+            Orientation == StackPanelOrientation.Vertical
+                ? Children.Sum(x => x.ActualHeight)
+                : Children.Max(x => x.ActualHeight);
+
+        protected override int MaxWidthByContent =>
+            Orientation == StackPanelOrientation.Horizontal
+                ? Children.Sum(x => x.ActualWidth)
+                : Children.Max(x => x.ActualWidth);
     }
 
     public enum StackPanelOrientation

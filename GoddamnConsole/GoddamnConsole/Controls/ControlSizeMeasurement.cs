@@ -1,9 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
-using System.Linq;
-using GoddamnConsole.Drawing;
 
 namespace GoddamnConsole.Controls
 {
@@ -12,58 +9,6 @@ namespace GoddamnConsole.Controls
         private ControlSize _width = ControlSizeType.BoundingBoxSize;
         private ControlSize _height = ControlSizeType.BoundingBoxSize;
         private bool _visibility = true;
-        public virtual Size BoundingBoxReduction { get; } = new Size(0, 0);
-
-        /// <summary>
-        /// Returns a minimal width value
-        /// </summary>
-        public virtual int MinWidth => BoundingBoxReduction.Width;
-        /// <summary>
-        /// Returns a maximal width value
-        /// </summary>
-        public virtual int MaxWidth
-        {
-            get
-            {
-                var chc = this as IChildrenControl;
-                if (chc != null)
-                {
-                    return chc.Children.Max(x => x.ActualWidth) + BoundingBoxReduction.Width;
-                }
-                var coc = this as IContentControl;
-                if (coc != null)
-                {
-                    return (coc.Content?.ActualWidth ?? 0) + BoundingBoxReduction.Width;
-                }
-                return BoundingBoxReduction.Width;
-            }
-        }
-
-        /// <summary>
-        /// Returns a minimal height value
-        /// </summary>
-        public virtual int MinHeight => BoundingBoxReduction.Height;
-
-        /// <summary>
-        /// Returns a maximal height value
-        /// </summary>
-        public virtual int MaxHeight 
-        {
-            get
-            {
-                var chc = this as IChildrenControl;
-                if (chc != null)
-                {
-                    return chc.Children.Max(x => x.ActualHeight) + BoundingBoxReduction.Height;
-                }
-                var coc = this as IContentControl;
-                if (coc != null)
-                {
-                    return (coc.Content?.ActualHeight ?? 0) + BoundingBoxReduction.Height;
-                }
-                return BoundingBoxReduction.Height;
-            }
-        }
 
         /// <summary>
         /// Gets or sets the width of this control
@@ -85,130 +30,105 @@ namespace GoddamnConsole.Controls
             set { _height = value; OnPropertyChanged(); }
         }
 
-        private readonly Stack<Control> _minwstack = new Stack<Control>();
-        private readonly Stack<Control> _minhstack = new Stack<Control>();
-        private readonly Stack<Control> _maxwstack = new Stack<Control>();
-        private readonly Stack<Control> _maxhstack = new Stack<Control>();
+        [AlsoNotifyFor(nameof(ActualWidth))]
+        public int MaxWidth
+        {
+            get { return _maxWidth; }
+            set { _maxWidth = value; OnPropertyChanged(); }
+        }
+
+        [AlsoNotifyFor(nameof(ActualHeight))]
+        public int MaxHeight
+        {
+            get { return _maxHeight; }
+            set { _maxHeight = value; OnPropertyChanged(); }
+        }
+
+        [AlsoNotifyFor(nameof(ActualWidth))]
+        public int MinWidth
+        {
+            get { return _minWidth; }
+            set { _minWidth = value; OnPropertyChanged(); }
+        }
+
+        [AlsoNotifyFor(nameof(ActualHeight))]
+        public int MinHeight
+        {
+            get { return _minHeight; }
+            set { _minHeight = value; OnPropertyChanged(); }
+        }
+
+        private bool _isMeasuringMaxWidth;
+        private bool _isMeasuringMaxHeight;
+        private int _maxWidth = int.MaxValue;
+        private int _maxHeight = int.MaxValue;
+        private int _minWidth;
+        private int _minHeight;
+
+        protected abstract int MaxWidthByContent { get; }
+        protected abstract int MaxHeightByContent { get; }
+
+        public int MeasureWidth(ControlSize? overrideSize = null)
+        {
+            var size = overrideSize ?? Width;
+            switch (size.Type)
+            {
+                case ControlSizeType.Fixed:
+                    return Math.Max(0, size.Value);
+                case ControlSizeType.Infinite:
+                    return int.MaxValue;
+                case ControlSizeType.BoundingBoxSize:
+                    return Parent?.MeasureBoundingBox(this)?.Width ?? Console.WindowWidth;
+                case ControlSizeType.MaxByContent:
+                    if (_isMeasuringMaxWidth)
+                    {
+                        // measurement loop
+                        return MaxWidth;
+                    }
+                    _isMeasuringMaxWidth = true;
+                    var value = MaxWidthByContent;
+                    _isMeasuringMaxWidth = false;
+                    return value;
+                default:
+                    return 0;
+            }
+        }
+
+        public int MeasureHeight(ControlSize? overrideSize = null)
+        {
+            var size = overrideSize ?? Height;
+            switch (size.Type)
+            {
+                case ControlSizeType.Fixed:
+                    return Math.Max(0, size.Value);
+                case ControlSizeType.Infinite:
+                    return int.MaxValue;
+                case ControlSizeType.BoundingBoxSize:
+                    return Parent?.MeasureBoundingBox(this)?.Height ?? Console.WindowHeight;
+                case ControlSizeType.MaxByContent:
+                    if (_isMeasuringMaxHeight)
+                    {
+                        // measurement loop
+                        return MaxHeight;
+                    }
+                    _isMeasuringMaxHeight = true;
+                    var value = MaxHeightByContent;
+                    _isMeasuringMaxHeight = false;
+                    return value;
+                default:
+                    return 0;
+            }
+        }
 
         /// <summary>
         /// Returns the measured width of this control
         /// </summary>
-        public int ActualWidth
-        {
-            get
-            {
-                switch (Width.Type)
-                {
-                    case ControlSizeType.Fixed:
-                        return Width.Value;
-                    case ControlSizeType.Infinite:
-                        return int.MaxValue;
-                    case ControlSizeType.BoundingBoxSize:
-                        if (Parent?.Width.Type == ControlSizeType.MaxByContent ||
-                            Parent?.Width.Type == ControlSizeType.MinByContent)
-                        {
-                            // possible loop
-                            var parent = Parent?.Parent;
-                            var reduction = Parent?.BoundingBoxReduction.Width ?? 0;
-                            while (parent != null)
-                            {
-                                reduction += parent.BoundingBoxReduction.Width;
-                                if (parent.Width.Type != ControlSizeType.MaxByContent &&
-                                    parent.Width.Type != ControlSizeType.MinByContent)
-                                {
-                                    return parent.ActualWidth - reduction;
-                                }
-                                parent = parent.Parent;
-                            }
-                            return Console.WindowHeight - reduction;
-                        }
-                        return Parent?.MeasureBoundingBox(this)?.Width
-                               ?? Console.WindowWidth;
-                    case ControlSizeType.MinByContent:
-                        if (_minwstack.Contains(this))
-                        {
-                            // measurement loop
-                            return 0;
-                        }
-                        _minwstack.Push(this);
-                        var minValue = MinWidth;
-                        _minwstack.Pop();
-                        return minValue;
-                    case ControlSizeType.MaxByContent:
-                        if (_maxwstack.Contains(this))
-                        {
-                            // measurement loop
-                            return int.MaxValue;
-                        }
-                        _maxwstack.Push(this);
-                        var maxValue = MaxWidth;
-                        _maxwstack.Pop();
-                        return maxValue;
-                    default:
-                        return 0;
-                }
-            }
-        }
+        public int ActualWidth => Math.Max(0, Math.Max(MinWidth, Math.Min(MaxWidth, MeasureWidth())));
 
         /// <summary>
         /// Returns the measured height of this control
         /// </summary>
-        public int ActualHeight
-        {
-            get
-            {
-                switch (Height.Type)
-                {
-                    case ControlSizeType.Fixed:
-                        return Height.Value;
-                    case ControlSizeType.Infinite:
-                        return int.MaxValue;
-                    case ControlSizeType.BoundingBoxSize:
-                        if (Parent?.Height.Type == ControlSizeType.MaxByContent ||
-                            Parent?.Height.Type == ControlSizeType.MinByContent)
-                        {
-                            // possible loop
-                            var parent = Parent?.Parent;
-                            var reduction = Parent?.BoundingBoxReduction.Height ?? 0;
-                            while (parent != null)
-                            {
-                                reduction += parent.BoundingBoxReduction.Height;
-                                if (parent.Height.Type != ControlSizeType.MaxByContent &&
-                                    parent.Height.Type != ControlSizeType.MinByContent)
-                                {
-                                    return parent.ActualHeight - reduction;
-                                }
-                                parent = parent.Parent;
-                            }
-                            return Console.WindowHeight - reduction;
-                        }
-                        return Parent?.MeasureBoundingBox(this)?.Height
-                               ?? Console.WindowHeight;
-                    case ControlSizeType.MinByContent:
-                        if (_minhstack.Contains(this))
-                        {
-                            // measurement loop
-                            return 0;
-                        }
-                        _minhstack.Push(this);
-                        var minValue = MinHeight;
-                        _minhstack.Pop();
-                        return minValue;
-                    case ControlSizeType.MaxByContent:
-                        if (_maxhstack.Contains(this))
-                        {
-                            // measurement loop
-                            return int.MaxValue;
-                        }
-                        _maxhstack.Push(this);
-                        var maxValue = MaxHeight;
-                        _maxhstack.Pop();
-                        return maxValue;
-                    default:
-                        return 0;
-                }
-            }
-        }
+        public int ActualHeight => Math.Max(0, Math.Max(MinHeight, Math.Min(MaxHeight, MeasureHeight())));
 
         /// <summary>
         /// Gets or sets a value that indicates whether control is visible
@@ -250,6 +170,7 @@ namespace GoddamnConsole.Controls
         /// <summary>
         /// Control size equals of minimal content size
         /// </summary>
+        [Obsolete]
         MinByContent
     }
 

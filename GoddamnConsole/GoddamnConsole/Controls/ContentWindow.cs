@@ -8,27 +8,25 @@ namespace GoddamnConsole.Controls
     [ContentProperty(nameof(Content))]
     public class ContentWindow : WindowBase, IContentControl
     {
-        public override Size BoundingBoxReduction => new Size(2, 2);
+        protected override int MaxHeightByContent
+        {
+            get
+            {
+                if (Content == null) return 2;
+                if (Content.Height.Type == ControlSizeType.BoundingBoxSize) return 2;
+                return Content.ActualHeight + 2;
+            }
+        }
 
-        //public override int MaxHeight
-        //{
-        //    get
-        //    {
-        //        if (Content == null) return 2;
-        //        if (Content.Height.Type == ControlSizeType.BoundingBoxSize) return 2;
-        //        return Content.ActualHeight + 2;
-        //    }
-        //}
-
-        //public override int MaxWidth
-        //{
-        //    get
-        //    {
-        //        if (Content == null) return 2;
-        //        if (Content.Width.Type == ControlSizeType.BoundingBoxSize) return 2;
-        //        return Content.ActualWidth + 2;
-        //    }
-        //}
+        protected override int MaxWidthByContent
+        {
+            get
+            {
+                if (Content == null) return 2;
+                if (Content.Width.Type == ControlSizeType.BoundingBoxSize) return 2;
+                return Content.ActualWidth + 2;
+            }
+        }
 
         protected override void OnRender(DrawingContext dc)
         {
@@ -81,7 +79,7 @@ namespace GoddamnConsole.Controls
                     ContentDetached?.Invoke(this, new ChildRemovedEventArgs(pc));
                 }
                 if (value?.Name != null &&
-                    AllControls.Any(x => x.Name == value.Name))
+                    AllControls.Any(x => x.Name == value.Name)) //-V3095
                     throw new Exception("Control with exact name already exists");
                 if (value == null || value.Parent == this) _content = value;
                 else value.Parent = this;

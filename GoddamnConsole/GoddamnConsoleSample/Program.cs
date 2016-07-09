@@ -1,7 +1,4 @@
-﻿using System.Linq;
-using GoddamnConsole.Controls;
-using GoddamnConsole.Drawing;
-using GoddamnConsole.Xaml;
+﻿using GoddamnConsole.Xaml;
 using Console = GoddamnConsole.Console;
 
 namespace GoddamnConsoleSample

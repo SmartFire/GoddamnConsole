@@ -23,17 +23,16 @@ namespace GoddamnConsole.Controls
             get { return _drawBorders; }
             set { _drawBorders = value; OnPropertyChanged(); }
         }
-
-        public override Size BoundingBoxReduction
-            => DrawBorders ? new Size(Math.Max(1, ColumnDefinitions.Count) + 1, Math.Max(1, RowDefinitions.Count) + 1) : new Size(2, 2);
-
-        public override int MaxHeight =>
+        
+        protected override int MaxHeightByContent =>
             Children.GroupBy(Grid.GetColumn)
-                    .Max(x => x.Sum(y => y.ActualHeight)) + BoundingBoxReduction.Height;
+                    .Max(x => x.Sum(y => y.ActualHeight))
+            + (DrawBorders ? Math.Max(1, RowDefinitions.Count) + 1 : 2);
 
-        public override int MaxWidth =>
+        protected override int MaxWidthByContent =>
             Children.GroupBy(Grid.GetRow)
-                    .Max(x => x.Sum(y => y.ActualWidth)) + BoundingBoxReduction.Width;
+                    .Max(x => x.Sum(y => y.ActualWidth))
+            + (DrawBorders ? Math.Max(1, ColumnDefinitions.Count) + 1 : 2);
 
         /// <summary>
         /// Returns a collection of row definitions

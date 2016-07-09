@@ -41,5 +41,8 @@ namespace GoddamnConsole.Controls
         public override Point GetScrollOffset(Control child) => new Point(0, 0);
                 
         public override bool IsChildVisible(Control child) => true;
+
+        protected override int MaxWidthByContent => Content?.MeasureWidth(ControlSizeType.MaxByContent) ?? 0;
+        protected override int MaxHeightByContent => Content?.MeasureHeight(ControlSizeType.MaxByContent) ?? 0;
     }
 }

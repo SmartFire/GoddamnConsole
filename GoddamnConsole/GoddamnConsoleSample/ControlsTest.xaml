@@ -10,33 +10,33 @@
         </Tab>
         <Tab Title="Vertical StackPanel">
             <StackPanel Orientation="Vertical">
-                <Border Height="MaxByContent">
-                    <TextView Text="Item 1" Height="MaxByContent"/>
+                <Border>
+                    <TextView Text="Item 1"/>
                 </Border>
-                <Border Height="MaxByContent">
-                    <TextView Text="Item 2" Height="MaxByContent"/>
+                <Border>
+                    <TextView Text="Item 2"/>
                 </Border>
-                <Border Height="MaxByContent">
-                    <TextView Text="Item 3" Height="MaxByContent"/>
+                <Border>
+                    <TextView Text="Item 3"/>
                 </Border>
-                <Border Height="MaxByContent">
-                    <TextView Text="Item 4" Height="MaxByContent"/>
+                <Border>
+                    <TextView Text="Item 4"/>
                 </Border>
             </StackPanel>
         </Tab>
         <Tab Title="Horizontal StackPanel">
             <StackPanel Orientation="Horizontal">
-                <Border Width="MaxByContent">
-                    <TextView Text="Item 1" Width="MaxByContent"/>
+                <Border>
+                    <TextView Text="Item 1"/>
                 </Border>
-                <Border Width="MaxByContent">
-                    <TextView Text="Item 2" Width="MaxByContent"/>
+                <Border>
+                    <TextView Text="Item 2"/>
                 </Border>
-                <Border Width="MaxByContent">
-                    <TextView Text="Item 3" Width="MaxByContent"/>
+                <Border>
+                    <TextView Text="Item 3"/>
                 </Border>
-                <Border Width="MaxByContent">
-                    <TextView Text="Item 4" Width="MaxByContent"/>
+                <Border>
+                    <TextView Text="Item 4"/>
                 </Border>
             </StackPanel>
         </Tab>
@@ -61,11 +61,11 @@
         </Tab>
         <Tab Title="Button + ProgressBar">
             <StackPanel Orientation="Vertical">
-                <TextView Text="Press that" Height="MaxByContent"/>
-                <Button Text="Press me" Height="MaxByContent" Clicked="ButtonClicked"/>
+                <TextView Text="Press that" HorizontalTextAlignment="Center"/>
+                <Button Text="Press me" Clicked="ButtonClicked"/>
                 <StackPanel Orientation="Horizontal" Height="1">
-                    <TextView Text="Click count: " Width="MaxByContent"/>
-                    <TextView Text="{b:Binding ClickCount}" Width="MaxByContent"/>
+                    <TextView Text="Click count: "/>
+                    <TextView Text="{b:Binding ClickCount}"/>
                 </StackPanel>
                 <ProgressBar MaxValue="100" Position="{b:Binding ClickCount}"
                              Height="3" DisplayMode="Position"/>

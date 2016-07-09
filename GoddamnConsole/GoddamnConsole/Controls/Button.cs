@@ -15,7 +15,8 @@ namespace GoddamnConsole.Controls
 
         private string _text;
 
-        public override int MinHeight => 3;
+        protected override int MaxWidthByContent => 2 + (Text?.Length ?? 0);
+        protected override int MaxHeightByContent => 3;
 
         /// <summary>
         /// Gets or sets the title of button
@@ -35,8 +36,6 @@ namespace GoddamnConsole.Controls
         {
             if (info.Key == ConsoleKey.Enter) Clicked?.Invoke(this, EventArgs.Empty);
         }
-
-        public override int MaxHeight => 3;
 
         protected override void OnRender(DrawingContext dc)
         {

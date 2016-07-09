@@ -21,9 +21,7 @@ namespace GoddamnConsole.Controls
                 OnPropertyChanged();
             }
         }
-
-        public override Size BoundingBoxReduction { get; } = new Size(2, 2);
-
+        
         protected override void OnRender(DrawingContext context)
         {
             context.Clear(Background);
@@ -40,5 +38,8 @@ namespace GoddamnConsole.Controls
         {
             return new Rectangle(1, 1, ActualWidth - 2, ActualHeight - 2);
         }
+
+        protected override int MaxWidthByContent => (Content?.MeasureWidth(ControlSizeType.MaxByContent) ?? 0) + 2;
+        protected override int MaxHeightByContent => (Content?.MeasureHeight(ControlSizeType.MaxByContent) ?? 0) + 2;
     }
 }
