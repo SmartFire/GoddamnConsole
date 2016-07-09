@@ -1,15 +1,13 @@
 # GoddamnConsole
 ### A console UI framework for .NET
 
-GoddamnConsole is simple console UI framework, that uses visual components instead of direct console output.
+GoddamnConsole is simple cross-platform console UI framework, that uses visual components instead of direct console output.
 
 ## Features
 
 1. Visual components
-2. Multiple windows
-3. Keyboard input
-4. Simple drawing
-5. Can be portable
+2. XAML support
+3. Data binding
 
 ## Documentation
 
@@ -17,7 +15,10 @@ Full API Reference on https://zawodskoj.github.io/
 
 ## OS Support
 
-GoddamnConsole uses `INativeConsoleProvider` interface. It abstracts away a low-level console API from the library. For now, only Windows provider is supported, but Linux provider will be added soon.
+GoddamnConsole uses `INativeConsoleProvider` interface. It abstracts away a low-level console API from the library. 
+Supported OS:
+- Windows
+- Linux
 
 ## Installation
 
